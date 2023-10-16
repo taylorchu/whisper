@@ -33,16 +33,6 @@ def median_filter(x: torch.Tensor, filter_width: int):
 
     result = None
     x = F.pad(x, (filter_width // 2, filter_width // 2, 0, 0), mode="reflect")
-    if x.is_cuda:
-        try:
-            from .triton_ops import median_filter_cuda
-
-            result = median_filter_cuda(x, filter_width)
-        except (RuntimeError, subprocess.CalledProcessError):
-            warnings.warn(
-                "Failed to launch Triton kernels, likely due to missing CUDA toolkit; "
-                "falling back to a slower median kernel implementation..."
-            )
 
     if result is None:
         # sort() is faster than torch.median (https://github.com/pytorch/pytorch/issues/51450)
@@ -139,15 +129,6 @@ def dtw_cuda(x, BLOCK_SIZE=1024):
 
 
 def dtw(x: torch.Tensor) -> np.ndarray:
-    if x.is_cuda:
-        try:
-            return dtw_cuda(x)
-        except (RuntimeError, subprocess.CalledProcessError):
-            warnings.warn(
-                "Failed to launch Triton kernels, likely due to missing CUDA toolkit; "
-                "falling back to a slower DTW implementation..."
-            )
-
     return dtw_cpu(x.double().cpu().numpy())
 
 
